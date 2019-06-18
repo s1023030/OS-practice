@@ -3,8 +3,13 @@
 #include <stdlib.h>
 #include <time.h>
 
+#define MAX_NUM_THREADS 10
+#define COUNT_TIME 100
 long long int sum=0;
+long long int partSum[MAX_NUM_THREADS] = {0};
+
 struct thread_data {
+	int num;
     int start;
     int end;
 };
@@ -15,7 +20,7 @@ int main(int argc, char *argv[])
 	clock_t start,end;
 	double time=0.0;
 	int numToSum=atoi(argv[1]);
-	int i;
+	int i,j;
 	
 	if (argc != 2) {
 		fprintf(stderr,"usage: a.out <integer value>\n");
@@ -26,12 +31,16 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
-	for(i=2;i<=6;i++){
+	for(i=1;i<=6;i++){
 		start = clock();
-		calSum(numToSum,i);
+		for(j=0;j<COUNT_TIME;j++){
+			calSum(numToSum,i);
+		}
 		end = clock();
-		time= (double)(end - start)/1000.0;
-		printf("Using %lf second.\n",time);
+		time= (end - start)/(double)(CLOCKS_PER_SEC);
+		printf("Using %d threads.\n",i);
+		printf("sum = %lld .\n",sum);
+		printf("Using %lf .\n",time);
 		printf("==========================\n");
 	}
 	
@@ -39,13 +48,19 @@ int main(int argc, char *argv[])
 	return 0;
 }
 void calSum(int numToSum,int numOfThreads){
+	int i;
+	int interval=numToSum/numOfThreads;
+	
 	sum=(long long int)0;
+	for(i=0;i<numOfThreads;i++){
+		partSum[i] = 0;
+	}
 	pthread_t tid[numOfThreads]; 
 	pthread_attr_t attr[numOfThreads];
 	struct thread_data* thread_array = malloc(numOfThreads * sizeof(struct thread_data));
-	int i;
-	int interval=numToSum/numOfThreads;
+	
 	for(i=0;i<numOfThreads;i++){
+		thread_array[i].num=i;
 		if(i==0){
 			thread_array[i].start=1;
 			thread_array[i].end=interval;
@@ -59,19 +74,22 @@ void calSum(int numToSum,int numOfThreads){
 			thread_array[i].end=(i+1)*interval;
 		}
 		pthread_attr_init(&attr[i]);
-		pthread_create(&tid[i],&attr[i],runner,(void*) &thread_array[i]);
+		pthread_create(&tid[i],&attr[i],runner,(void*)&thread_array[i]);
 	}
 	for(i=0;i<numOfThreads;i++){
 		pthread_join(tid[i],NULL);
 	}
 	free(thread_array);
-	printf("sum = %lld .\n",sum);
+	for(i=0;i<numOfThreads;i++){
+		sum+=partSum[i];
+	}
 }
 void *runner(void *param){
 	int lower=((struct thread_data*) param) -> start, upper= ((struct thread_data*) param) -> end;
+	int num=((struct thread_data*) param) -> num;
 	int i;
 	for (i = lower; i <= upper; i++){
-		sum += (long long int)i;
+		partSum[num] += (long long int)i;
 	}
 	pthread_exit (0);
 }
