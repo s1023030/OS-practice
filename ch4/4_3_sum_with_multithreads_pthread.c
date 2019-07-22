@@ -3,8 +3,8 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define MAX_NUM_THREADS 10
-#define COUNT_TIME 100
+#define MAX_NUM_THREADS 20
+#define COUNT_TIME 1
 long long int sum=0;
 long long int partSum[MAX_NUM_THREADS] = {0};
 
@@ -31,7 +31,7 @@ int main(int argc, char *argv[])
 		return -1;
 	}
 	
-	for(i=1;i<=6;i++){
+	for(i=1;i<=MAX_NUM_THREADS;i++){
 		start = clock();
 		for(j=0;j<COUNT_TIME;j++){
 			calSum(numToSum,i);
