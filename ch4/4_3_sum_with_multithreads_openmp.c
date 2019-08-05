@@ -1,3 +1,7 @@
+/*
+Add -fopenmp while compiling the code 
+*/
+
 #include <stdio.h>
 #include <omp.h>
 #include <stdio.h>
